@@ -148,6 +148,39 @@ public class MarkovDecisionProcess {
 		return s.getReward();
 	}
 	
+	/**
+	 * Transit from one state to another with probability Pr(s, a, s')
+	 * @param s
+	 * @param a
+	 * @return
+	 */
+	public State transit(State s, Action a) {
+		if(isPossibleTransit(s, a)) {
+			int newWorkloadLevel = s.getWorkload() + a.getChangedWorkload();
+			int newGreenEnergyLevel = s.getGreenEnergy() + a.getChangedGreenEnergy();
+			int newBatteryLevel = s.getBattery() + a.getChangedBattery();
+			return grid[newWorkloadLevel][newGreenEnergyLevel][newBatteryLevel];
+		}
+		return s;
+	}
 	
+	/**
+	 * To validate the transit is possible, e.g. using some actions can reach out of boundary.
+	 * The next state should belong to [0, maxLevel)
+	 * @param s
+	 * @param a
+	 * @return
+	 */
+	public boolean isPossibleTransit(State s, Action a) {
+		int newWorkloadLevel = s.getWorkload() + a.getChangedWorkload();
+		int newGreenEnergyLevel = s.getGreenEnergy() + a.getChangedGreenEnergy();
+		int newBatteryLevel = s.getBattery() + a.getChangedBattery();
+	    if((newWorkloadLevel >= 0) &&  (newWorkloadLevel < totalWorkloadLevel)
+	    		&& (newGreenEnergyLevel >= 0) && (newGreenEnergyLevel <  totalGreenEnergyLevel)
+	    		&& (newBatteryLevel >= 0) &&  (newBatteryLevel <  totalBatteryLevel))
+		return true;
+	    else 
+	    	return false;
+	}
 	
 }
