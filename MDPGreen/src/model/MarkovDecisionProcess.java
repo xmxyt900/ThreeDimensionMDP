@@ -5,6 +5,7 @@ import java.util.Vector;
 import model.*;
 public class MarkovDecisionProcess {
 	
+
 	Vector transitions;
 	State state;
 	//The states that can be reached, which means the transition probability is not 0 for these states. 
@@ -15,6 +16,8 @@ public class MarkovDecisionProcess {
 	int totalWorkloadLevel;
 	int totalGreenEnergyLevel;
 	int totalBatteryLevel;
+	
+
 	//All the states
 	State[][][] grid;
 	
@@ -28,26 +31,44 @@ public class MarkovDecisionProcess {
 	
 	int currentAction;
 	
-	//24 hours, 24 time intervals
-	final int MAX_TIME_INTERVAL = 23;
+	double prob[][][][];
 	
+	//24 hours, 24 time intervals
+	int maxTimeInterval;
+		
 	//initilize the MDP space
-	public MarkovDecisionProcess(int totalWorkloadLevel, int totalGreenEnergyLevel, int totalBatteryLevel) {
+	public MarkovDecisionProcess(int totalWorkloadLevel, int totalGreenEnergyLevel, int totalBatteryLevel, double prob[][][][], int maxTimeInterval) {
 		this.totalWorkloadLevel = totalWorkloadLevel;
 		this.totalGreenEnergyLevel = totalGreenEnergyLevel;
 		this.totalBatteryLevel = totalBatteryLevel;
+		this.prob = prob;
+		this.maxTimeInterval = maxTimeInterval;
+		grid = new State[totalWorkloadLevel][totalGreenEnergyLevel][totalBatteryLevel]; 
 		numActions = (2*totalWorkloadLevel-1) * (2*totalGreenEnergyLevel-1) * (2*totalBatteryLevel-1);
+		for(int t =0; t < maxTimeInterval; t++) {
 		for(int i = 0; i < totalWorkloadLevel; i++) {
 			for(int j = 0; j < totalGreenEnergyLevel; j++) {
 				for(int k = 0; k < totalBatteryLevel; k++) {
-					grid[i][j][k] = new State(i ,j, k, 0.0, 0.0, 0);
+					grid[i][j][k] = new State(i ,j, k, prob[t][i][j][k], 0.0, t);
+//					System.out.println("Prob:" + prob[t][i][j][k]);
 				}
 			}
+		}
 		}
 	
 		
 		reachableStates = new Vector(totalWorkloadLevel*totalGreenEnergyLevel*totalBatteryLevel);
 			
+	}
+	
+	public void ListAllStates() {
+		for(int i = 0; i < totalWorkloadLevel; i++) {
+			for(int j = 0; j < totalGreenEnergyLevel; j++) {
+				for(int k = 0; k < totalBatteryLevel; k++) {
+					System.out.print(grid[i][j][k].toString());
+				}
+			}
+		}
 	}
 	
 	/**
@@ -84,8 +105,9 @@ public class MarkovDecisionProcess {
 					s = grid[i][j][k];
 					if(s.getProbability() != 0) {
 						//If probability of state is not 0, put this state into the reachable list.  
-						reachableStates.add(s);
+						s.index = index;
 						index++;
+						reachableStates.add(s);
 					}
 				}
 			}
@@ -148,6 +170,7 @@ public class MarkovDecisionProcess {
 		return s.getReward();
 	}
 	
+	
 	/**
 	 * Transit from one state to another with probability Pr(s, a, s')
 	 * @param s
@@ -181,6 +204,10 @@ public class MarkovDecisionProcess {
 		return true;
 	    else 
 	    	return false;
+	}
+	
+	public Vector getReachableStates() {
+		return reachableStates;
 	}
 	
 }

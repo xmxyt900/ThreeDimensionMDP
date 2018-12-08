@@ -25,6 +25,7 @@ public class State {
 	//State is terminated, e.g. at the last time interval
 	boolean terminate;
 	
+	int index;
 	
 	public State(int workload, int greenEnergy, int battery, double probability, double reward, int time) {
 		this.workload = workload;
@@ -32,13 +33,15 @@ public class State {
 		this.battery = battery;
 		this.reward = reward;
 		this.action = null;
+		this.index = -1;
 		this.visited = false;
 		this.time= time;
 		this.terminate = false;
+		this.probability = probability;
 	}
 	
 	public String toString() {
-		return ("State:" + workload + ", " + greenEnergy + ", " + battery +"\n");
+		return ("State[" + workload + ", " + greenEnergy + ", " + battery +"] " + "reward:" + getReward() + " prob:" + getProbability() + "\n");
 	}
 	
 	public void setTerminate() {
@@ -73,7 +76,8 @@ public class State {
 	//W: workload, G: greenEnergy, B: battery
 	//E.g. Pr(W=10) = 0.8, Pr(G=5) = 0.8, Pr(B=0) = 0.5, then Pr(S=(10, 5, 0)) = 0.8*0.8*0.5
 	public double getProbability() {
-		return 0.0;
+		return probability;
+		//return Math.random();
 	}
 	
 	//Reward value
@@ -86,5 +90,12 @@ public class State {
 		
 	}
 	
+	public void setReward(double reward) {
+		this.reward = reward;
+	}
+	
+	public int getIndex() {
+		return index;
+	}
 
 }
