@@ -1,8 +1,6 @@
 package model;
 
 import java.util.Vector;
-
-import model.*;
 public class MarkovDecisionProcess {
 	
 
@@ -11,15 +9,15 @@ public class MarkovDecisionProcess {
 	//The states that can be reached, which means the transition probability is not 0 for these states. 
 	Vector reachableStates;
 	
-	Vector possibleActions;
+    Vector possibleActions;
 	
-	int totalWorkloadLevel;
-	int totalGreenEnergyLevel;
-	int totalBatteryLevel;
+    public int totalWorkloadLevel;
+    public int totalGreenEnergyLevel;
+	public int totalBatteryLevel;
 	
 
 	//All the states
-	State[][][] grid;
+	public State[][][][] grid;
 	
 	Action[][][] actions;
 
@@ -35,6 +33,8 @@ public class MarkovDecisionProcess {
 	
 	//24 hours, 24 time intervals
 	int maxTimeInterval;
+	
+	State initialState;
 		
 	//initilize the MDP space
 	public MarkovDecisionProcess(int totalWorkloadLevel, int totalGreenEnergyLevel, int totalBatteryLevel, double prob[][][][], int maxTimeInterval) {
@@ -43,31 +43,40 @@ public class MarkovDecisionProcess {
 		this.totalBatteryLevel = totalBatteryLevel;
 		this.prob = prob;
 		this.maxTimeInterval = maxTimeInterval;
-		grid = new State[totalWorkloadLevel][totalGreenEnergyLevel][totalBatteryLevel]; 
+		
+		//Initial State, we set it at [0,0,0]
+		initialState = new State(0, 0, 0, 1, 0, -1);
+		initialState.setPath(initialState.toString());
+		
+		grid = new State[maxTimeInterval][totalWorkloadLevel][totalGreenEnergyLevel][totalBatteryLevel]; 
+		//Initialize actions space
 		numActions = (2*totalWorkloadLevel-1) * (2*totalGreenEnergyLevel-1) * (2*totalBatteryLevel-1);
 		for(int t =0; t < maxTimeInterval; t++) {
 		for(int i = 0; i < totalWorkloadLevel; i++) {
 			for(int j = 0; j < totalGreenEnergyLevel; j++) {
 				for(int k = 0; k < totalBatteryLevel; k++) {
-					grid[i][j][k] = new State(i ,j, k, prob[t][i][j][k], 0.0, t);
-//					System.out.println("Prob:" + prob[t][i][j][k]);
+					grid[t][i][j][k] = new State(i ,j, k, prob[t][i][j][k], 0.0, t);
+					if( t == maxTimeInterval - 1) {
+						grid[t][i][j][k].setTerminate();
+					}
 				}
 			}
 		}
-		}
-	
-		
+		}	
 		reachableStates = new Vector(totalWorkloadLevel*totalGreenEnergyLevel*totalBatteryLevel);
 			
 	}
 	
 	public void ListAllStates() {
+		for(int t = 0; t < maxTimeInterval; t ++) {
+			System.out.println("Time Interval: " + t);
 		for(int i = 0; i < totalWorkloadLevel; i++) {
 			for(int j = 0; j < totalGreenEnergyLevel; j++) {
 				for(int k = 0; k < totalBatteryLevel; k++) {
-					System.out.print(grid[i][j][k].toString());
+					System.out.print(grid[t][i][j][k].toString());
 				}
 			}
+		}
 		}
 	}
 	
@@ -79,12 +88,11 @@ public class MarkovDecisionProcess {
 	 */
 	public void compileActions(int totalWorkloadLevel, int totalGreenEnergyLevel, int totalBatteryLevel) {
 		//possible actions
-		actions = new Action[2*totalWorkloadLevel-1][2*totalGreenEnergyLevel-1][2*totalBatteryLevel-1];
+		possibleActions = new Vector((2*totalWorkloadLevel-1) * (2*totalGreenEnergyLevel-1) * (2*totalBatteryLevel-1));
 		for(int i = 1-totalWorkloadLevel; i < totalWorkloadLevel; i++ ) {
 			for(int j = 1- totalGreenEnergyLevel; j < totalGreenEnergyLevel; j++) {
 				for (int k = 1 - totalBatteryLevel; k < totalBatteryLevel; k++) {
-					actions[i][j][k] = new Action(i ,j , k);
-					possibleActions.add(actions[i][j][k] );
+					possibleActions.add(new Action(i ,j , k));
 				}
 			}
 		}
@@ -95,14 +103,20 @@ public class MarkovDecisionProcess {
 	 * Find the reachable states. The states with 0 probability are not considered. 
 	 * The following 4 methods are related to states
 	 */
-	public void compileStates() {
+	public void compileStates(int timeinterval) {
+		if(timeinterval == -1) {
+			//Add initial State
+			reachableStates.add(initialState);
+			this.numReachableState = 1;
+			
+		}else{				
 		State s;
 		int index = 0;
 		reachableStates.clear();
 		for(int i = 0; i < totalWorkloadLevel; i++) {
 			for(int j = 0; j < totalGreenEnergyLevel; j++) {
 				for(int k = 0; k < totalBatteryLevel; k++) {
-					s = grid[i][j][k];
+					s = grid[timeinterval][i][j][k];
 					if(s.getProbability() != 0) {
 						//If probability of state is not 0, put this state into the reachable list.  
 						s.index = index;
@@ -113,6 +127,7 @@ public class MarkovDecisionProcess {
 			}
 		}
 		this.numReachableState = index;
+		}
 	}
 	
 	public State getStartState() {
@@ -148,19 +163,26 @@ public class MarkovDecisionProcess {
 	}
 	
 	public Action getStartAction() {
-		currentAction = 0;
-		return actions[0][0][0];
+		return (Action) possibleActions.get(0);
 	}
 
 	
 	public Action getNextAction() {
 		currentAction ++;
-		if(currentAction == numActions)
+		if(currentAction == possibleActions.size()) {
 			return null;
+		}
 		else
 			return (Action) possibleActions.get(currentAction);
 	}
 	
+	public void resetCurrentAction() {
+		currentAction = 0;
+	}
+	
+	public int getNumPossibleActions() {
+		return possibleActions.size();
+	}
 	/**
 	 * Get the reward value, reward function is defined in State class
 	 * @param s
@@ -177,12 +199,12 @@ public class MarkovDecisionProcess {
 	 * @param a
 	 * @return
 	 */
-	public State transit(State s, Action a) {
+	public State transit(State s, Action a, int timeInterval) {
 		if(isPossibleTransit(s, a)) {
 			int newWorkloadLevel = s.getWorkload() + a.getChangedWorkload();
 			int newGreenEnergyLevel = s.getGreenEnergy() + a.getChangedGreenEnergy();
 			int newBatteryLevel = s.getBattery() + a.getChangedBattery();
-			return grid[newWorkloadLevel][newGreenEnergyLevel][newBatteryLevel];
+			return grid[timeInterval+1][newWorkloadLevel][newGreenEnergyLevel][newBatteryLevel];
 		}
 		return s;
 	}
@@ -209,5 +231,6 @@ public class MarkovDecisionProcess {
 	public Vector getReachableStates() {
 		return reachableStates;
 	}
+	
 	
 }

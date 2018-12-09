@@ -25,7 +25,14 @@ public class State {
 	//State is terminated, e.g. at the last time interval
 	boolean terminate;
 	
+	//Index of this state in the reachable state vector
 	int index;
+	
+	//Utility based on rewards in all states
+	double utility;
+	
+	//Path to reach current state
+	String path; 
 	
 	public State(int workload, int greenEnergy, int battery, double probability, double reward, int time) {
 		this.workload = workload;
@@ -38,6 +45,8 @@ public class State {
 		this.time= time;
 		this.terminate = false;
 		this.probability = probability;
+		this.utility = 0;
+		this.path = "";
 	}
 	
 	public String toString() {
@@ -96,6 +105,30 @@ public class State {
 	
 	public int getIndex() {
 		return index;
+	}
+	
+	public int getTimeInterval() {
+		return time;
+	}
+	
+	public void setUtility(double utility) {
+		this.utility = utility;
+	}
+	
+	public double getUtility() {
+		return utility;
+	}
+	
+	public void setPath(String path) {
+		this.path = path;
+	}
+	
+	/**
+	 * Get the best path to reach this sate
+	 * @return
+	 */
+	public String getPath() {
+		return path; 
 	}
 
 }

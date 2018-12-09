@@ -1,79 +1,120 @@
 package policy;
 
 import model.*;
-import Jama.*;
+
 
 /**
- * Jama is the leaner package to solve solution matrix
+ * This class is used to iterate different paths (policies) to maximize objective fucntion.
+ * 
  * @author minxianx
  *
  */
 public class PolicyEvaluator {
 
 	MarkovDecisionProcess mdp;
-	
+
 	int size;
-	
-	double gamma;
-	
-	double[][] A;
-	
-	double[][] b;
-	
-	public PolicyEvaluator(MarkovDecisionProcess mdp) 
-			throws IllegalStateException {
+	//Not used yet, but can be used for further extension in utility function.
+//	double gamma;
+
+	public PolicyEvaluator(MarkovDecisionProcess mdp, int timeInterval) throws IllegalStateException {
 		this.mdp = mdp;
+
+		mdp.compileStates(timeInterval);
 		size = mdp.getNumReachableStates();
-		
+		System.out.println("NumReachableStates: " + size + " at time interval " + timeInterval);
+
 		if (size == 0) {
-			throw new IllegalStateException("MDP is not prepared.");
+			throw new IllegalStateException(
+					"MDP is not prepared at time interval: " + timeInterval + " No reachable state");
 		}
-		
-		A = new double[size][size];
-		
-		b = new double[size][1];
-		
+
 	}
-	
-	public void solve() {
-		for(int i = 0; i < size; ++i) {
-			b[i][0] = 0.;
-			for(int j = 0; j < size; ++j) {
-				A[i][j] = 0;
-			}
-		}
-		
+
+	/**
+	 * Find the best paths to reach states at current interval
+	 * @param timeInveral
+	 */
+	public void solve(int timeInveral) {
+
 		State state = mdp.getStartState();
-		while (state!= null) {
-			int sIndex = state.getIndex();
-			A[sIndex][sIndex] = 1.0;
-			b[sIndex][0] = state.getReward();
+		Action action;
+		//Go through all reachable states
+		while (state != null) {			
+
+			State sPrime; //Next state after action
+			double prob;
+			double reward;
+			double preUtility;
+			double afterUtility;
+
+			int tempWorkloadLevel;
+			int tempGreenEnergyLevel;
+			int tempBatteryLevel;
+			String tempPath;
 			
-			Action action = mdp.getAction(state);
-			
-			//Simplified here, only one probability to transit from one state to another
-			State sPrime = mdp.transit(state, action);
-			//double prob = mdp.transGrid[][sPrime.getWorkload()][sPrime.getGreenEnergy()][sPrime.getBattery()];
-			double prob = sPrime.getProbability();
-			if(sPrime.isTerminated()) {
-				b[sIndex][0] += prob*sPrime.getReward();
-			}else {
-				A[sIndex][sPrime.getIndex()] -= prob;
+			action = mdp.getStartAction();
+			//Reste the action index to 0;
+			mdp.resetCurrentAction();
+			//Go through all possible actions
+			while (action != null) {
+				if (mdp.isPossibleTransit(state, action)) {
+					sPrime = mdp.transit(state, action, timeInveral);
+					reward = sPrime.getReward();
+					prob = sPrime.getProbability();
+					preUtility = state.getUtility();
+					//Utility function: U(s')= R(s)+ prob(s,a,s')*R(s')
+					afterUtility = preUtility + prob * reward;
+
+					tempWorkloadLevel = sPrime.getWorkload();
+					tempGreenEnergyLevel = sPrime.getGreenEnergy();
+					tempBatteryLevel = sPrime.getBattery();
+					tempPath = state.getPath();
+
+					//Keep the path with highest utility
+					if (afterUtility > mdp.grid[timeInveral
+							+ 1][tempWorkloadLevel][tempGreenEnergyLevel][tempBatteryLevel].getUtility()) {
+
+						mdp.grid[timeInveral + 1][tempWorkloadLevel][tempGreenEnergyLevel][tempBatteryLevel]
+								.setUtility(afterUtility);
+						mdp.grid[timeInveral + 1][tempWorkloadLevel][tempGreenEnergyLevel][tempBatteryLevel]
+								.setPath(tempPath + "-->" + "Time interval#" + (timeInveral+1) +" "+ sPrime.toString());
+
+					}
+				}
+				action = mdp.getNextAction();
 			}
-			
+
 			state = mdp.getNextReachableState();
 		}
-		Matrix mA = new Matrix(A);
-		if(mA.cond() > 1e3) 
-			throw (new ArithmeticException("Singular solution matrix."));
-		
-		Matrix mb = new Matrix(b);
-		Matrix x = mA.solve(mb);
-		
-		for (int i = 0; i < size; ++i) {
-			((State) mdp.getReachableStates().get(i)).setReward(x.get(i,0));
+
+	}
+
+	/**
+	 * Find the best path until current time interval
+	 * @param timeInterval
+	 */
+	public void solveFinalSate(int timeInterval) {
+		double bestUtility = 0;
+		int finalWorkloadLevel = -1;
+		int finalGreenEnergyLevel = -1;
+		int finalBatteryLevel = -1;
+		//Find the final state as well as its path that can maximize optimization objective
+		for (int i = 0; i < mdp.totalWorkloadLevel; i++) {
+			for (int j = 0; j < mdp.totalGreenEnergyLevel; j++) {
+				for (int k = 0; k < mdp.totalBatteryLevel; k++) {
+					if( mdp.grid[timeInterval][i][j][k].getUtility() > bestUtility) {
+						bestUtility = mdp.grid[timeInterval][i][j][k].getUtility();
+						finalWorkloadLevel = i;
+						finalGreenEnergyLevel = j;
+						finalBatteryLevel = k;
+					}
+				}
+			}
 		}
-			
 		
+		System.out.println("Best Path: " + mdp.grid[timeInterval][finalWorkloadLevel][finalGreenEnergyLevel][finalBatteryLevel].getPath());
+		System.out.println("Final Utility: " + mdp.grid[timeInterval][finalWorkloadLevel][finalGreenEnergyLevel][finalBatteryLevel].getUtility());
+
 	}
 }
