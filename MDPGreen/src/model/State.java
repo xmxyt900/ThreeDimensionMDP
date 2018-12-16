@@ -34,6 +34,13 @@ public class State {
 	//Path to reach current state
 	String path; 
 	
+	//Used to balance performance and renewable energy usage in getRewward() function
+	
+	
+	//Weight in reward function, if lambda = 1.0, it cares more about brown energy usage; if lambda = 0.0, it cares
+	//more about number of services running
+	final static double lambda = 0.9;
+	
 	public State(int workload, int greenEnergy, int battery, double probability, double reward, int time) {
 		this.workload = workload;
 		this.greenEnergy = greenEnergy;
@@ -94,8 +101,12 @@ public class State {
 	//Reward of State 1: W = 10, G = 5, B = 0£¬ max(10-5-0, 0) = 5, reward = 10 - 5 = 5
 	//Reward of State 2: W = 10, G = 15, B = 0, max(10 -15 - 0, 0) =0, reward = 10 - 0 = 10
 	//Reward of State 2 is better, which means few brown energy is used while supporting same amount of microservices. 
+	
+   //New reward function:
+	//(lambda)* -(max(W - G -B), 0) + (1 - lambda)*W
 	public double getReward() {
-		return workload - Math.max(workload - greenEnergy - battery, 0);
+//		return workload - Math.max(workload - greenEnergy - battery, 0);
+		return lambda * -1 * Math.max(workload - greenEnergy - battery, 0) + (1 - lambda) * workload;
 		
 	}
 	

@@ -8,13 +8,11 @@ package model;
  */
 public class Action {
 	
-	int c_workload;
-	int c_greenEnergy;
-	int c_battery;
-	public Action(int c_wokrload, int c_greenEnergy, int c_battery) {
+	int c_workload; // The workloads that will be changed
+	int batteryUsed; //Can only be 0, 1
+	public Action(int c_wokrload, int batteryUsed) {
 		this.c_workload = c_wokrload;
-		this.c_greenEnergy = c_greenEnergy;
-		this.c_battery = c_battery;
+		this.batteryUsed = batteryUsed;
 		
 	}
 	
@@ -23,18 +21,13 @@ public class Action {
 		
 	}
 	
-	public int getChangedGreenEnergy() {
-		return c_greenEnergy;
-	}
-	
-	public int getChangedBattery() {
-		return c_battery;
+	public int getBatteryUsed() {
+		return batteryUsed;
 	}
 	
 	public String toString() {
 		return "workload change:" + c_workload +
-				"green energy change:" + c_greenEnergy +
-				"battery change:" + c_battery + "\n";
+				", battery used:" + batteryUsed + "\n";
 	}
 
 }

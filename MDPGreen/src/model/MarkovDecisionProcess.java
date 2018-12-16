@@ -1,5 +1,6 @@
 package model;
 
+import java.util.ArrayList;
 import java.util.Vector;
 public class MarkovDecisionProcess {
 	
@@ -8,6 +9,9 @@ public class MarkovDecisionProcess {
 	State state;
 	//The states that can be reached, which means the transition probability is not 0 for these states. 
 	Vector reachableStates;
+	
+	ArrayList<State> transitStates;
+	
 	
     Vector possibleActions;
 	
@@ -88,12 +92,11 @@ public class MarkovDecisionProcess {
 	 */
 	public void compileActions(int totalWorkloadLevel, int totalGreenEnergyLevel, int totalBatteryLevel) {
 		//possible actions
-		possibleActions = new Vector((2*totalWorkloadLevel-1) * (2*totalGreenEnergyLevel-1) * (2*totalBatteryLevel-1));
+		//Two possible actions for battery usage
+		possibleActions = new Vector((2*totalWorkloadLevel-1) * 2);
 		for(int i = 1-totalWorkloadLevel; i < totalWorkloadLevel; i++ ) {
-			for(int j = 1- totalGreenEnergyLevel; j < totalGreenEnergyLevel; j++) {
-				for (int k = 1 - totalBatteryLevel; k < totalBatteryLevel; k++) {
-					possibleActions.add(new Action(i ,j , k));
-				}
+			for(int j = 0; j < 2; j++) {
+					possibleActions.add(new Action(i ,j));
 			}
 		}
 		
@@ -199,14 +202,14 @@ public class MarkovDecisionProcess {
 	 * @param a
 	 * @return
 	 */
-	public State transit(State s, Action a, int timeInterval) {
-		if(isPossibleTransit(s, a)) {
+	public ArrayList<State> transit(State s, Action a, int timeInterval) {
+		    transitStates = new ArrayList<State>();
 			int newWorkloadLevel = s.getWorkload() + a.getChangedWorkload();
-			int newGreenEnergyLevel = s.getGreenEnergy() + a.getChangedGreenEnergy();
-			int newBatteryLevel = s.getBattery() + a.getChangedBattery();
-			return grid[timeInterval+1][newWorkloadLevel][newGreenEnergyLevel][newBatteryLevel];
-		}
-		return s;
+			int newBatteryLevel = getNextBatteryLevel(s, a);
+			for(int newGreenEnergyLevel = 0; newGreenEnergyLevel < totalGreenEnergyLevel; newGreenEnergyLevel++) {
+				transitStates.add(grid[timeInterval+1][newWorkloadLevel][newGreenEnergyLevel][newBatteryLevel]);
+			}
+			return transitStates;
 	}
 	
 	/**
@@ -218,18 +221,32 @@ public class MarkovDecisionProcess {
 	 */
 	public boolean isPossibleTransit(State s, Action a) {
 		int newWorkloadLevel = s.getWorkload() + a.getChangedWorkload();
-		int newGreenEnergyLevel = s.getGreenEnergy() + a.getChangedGreenEnergy();
-		int newBatteryLevel = s.getBattery() + a.getChangedBattery();
-	    if((newWorkloadLevel >= 0) &&  (newWorkloadLevel < totalWorkloadLevel)
-	    		&& (newGreenEnergyLevel >= 0) && (newGreenEnergyLevel <  totalGreenEnergyLevel)
-	    		&& (newBatteryLevel >= 0) &&  (newBatteryLevel <  totalBatteryLevel))
+
+	    if((newWorkloadLevel >= 0) &&  (newWorkloadLevel < totalWorkloadLevel))
+	    {
 		return true;
-	    else 
+	    }
+	    else { 
 	    	return false;
+	    }
 	}
 	
 	public Vector getReachableStates() {
 		return reachableStates;
+	}
+	
+	public int getNextBatteryLevel(State s, Action a) {
+		if(a.getBatteryUsed() == 1) {
+		int workloadLevel = s.getWorkload() ;
+		int greenEnergyLevel = s.getGreenEnergy() ;
+        int batteryLevel = s.getBattery();
+        //Example: State[4, 5, 10], Action[-2,1], 
+        int nextBatteryLevel = Math.min(Math.max(greenEnergyLevel + batteryLevel - workloadLevel - a.getChangedWorkload(), 0), totalBatteryLevel-1);
+        return nextBatteryLevel;
+        //if battery is not not used for next time interval, battery level will be 0
+		}else {
+			return 0;
+		}
 	}
 	
 	

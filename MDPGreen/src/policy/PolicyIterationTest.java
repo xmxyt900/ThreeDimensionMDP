@@ -11,9 +11,9 @@ import model.*;
  */
 public class PolicyIterationTest {
 
-	final static int totalWorkloadLevel = 10;
-	final static int totalGreenEnergyLevel = 10;
-	final static int totalBatteryLevel = 10;
+	final static int totalWorkloadLevel = 5;
+	final static int totalGreenEnergyLevel = 3;
+	final static int totalBatteryLevel = 3;
 
 	// 24 hours
 	final static int timeIntervals = 24;
