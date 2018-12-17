@@ -39,12 +39,15 @@ public class PolicyEvaluator {
 	 * Find the best paths to reach states at current interval
 	 * @param timeInveral
 	 */
-	public void solve(int timeInveral) {
+	public void solve(int timeInterval) {
 
+		System.out.println("################Time Interval " +timeInterval + " Started#####################\n");
 		State state = mdp.getStartState();
 		Action action;
 		//Go through all reachable states
-		while (state != null) {			
+		while (state != null) {		
+			
+			System.out.print("Now Trying actions for " + state.toString());
 
 			State sPrime; //Next state after action
 			double prob;
@@ -63,7 +66,7 @@ public class PolicyEvaluator {
 			//Go through all possible actions
 			while (action != null) {
 				if (mdp.isPossibleTransit(state, action)) {
-					transitStates = mdp.transit(state, action, timeInveral);
+					transitStates = mdp.transit(state, action, timeInterval);
 					for(int transitStatesIndex = 0; transitStatesIndex < transitStates.size(); transitStatesIndex++) {
 										
 					sPrime = transitStates.get(transitStatesIndex);
@@ -80,26 +83,29 @@ public class PolicyEvaluator {
 					
 					if (sPrime.isVisited() == false) {
 
-											mdp.grid[timeInveral + 1][tempWorkloadLevel][tempGreenEnergyLevel][tempBatteryLevel].setVisited(true);
+											mdp.grid[timeInterval + 1][tempWorkloadLevel][tempGreenEnergyLevel][tempBatteryLevel].setVisited(true);
 
 						
-											mdp.grid[timeInveral + 1][tempWorkloadLevel][tempGreenEnergyLevel][tempBatteryLevel]
+											mdp.grid[timeInterval + 1][tempWorkloadLevel][tempGreenEnergyLevel][tempBatteryLevel]
 													.setUtility(afterUtility);
 							
-											mdp.grid[timeInveral + 1][tempWorkloadLevel][tempGreenEnergyLevel][tempBatteryLevel]
-													.setPath(tempPath + "-->" + "Time interval#" + (timeInveral+1) +" "+ sPrime.toString() + "By action: " + action.toString());
+											mdp.grid[timeInterval + 1][tempWorkloadLevel][tempGreenEnergyLevel][tempBatteryLevel]
+													.setPath(tempPath + "-->" + "Time interval#" + (timeInterval+1) +" "+ sPrime.toString() + "By action: " + action.toString());
+											System.out.print("###### With Action " + action.toString());
+											System.out.println("###### Path updated for " + sPrime.toString());
 
 										}
 
 					//Keep the path with highest utility
-					if (sPrime.isVisited() == true && afterUtility > mdp.grid[timeInveral
+					if (sPrime.isVisited() == true && afterUtility > mdp.grid[timeInterval
 							+ 1][tempWorkloadLevel][tempGreenEnergyLevel][tempBatteryLevel].getUtility()) {
 
-						mdp.grid[timeInveral + 1][tempWorkloadLevel][tempGreenEnergyLevel][tempBatteryLevel]
+						mdp.grid[timeInterval + 1][tempWorkloadLevel][tempGreenEnergyLevel][tempBatteryLevel]
 								.setUtility(afterUtility);
-						mdp.grid[timeInveral + 1][tempWorkloadLevel][tempGreenEnergyLevel][tempBatteryLevel]
-								.setPath(tempPath + "-->" + "Time interval#" + (timeInveral+1) +" "+ sPrime.toString() + "By action: " + action.toString());
-
+						mdp.grid[timeInterval + 1][tempWorkloadLevel][tempGreenEnergyLevel][tempBatteryLevel]
+								.setPath(tempPath + "-->" + "Time interval#" + (timeInterval+1) +" "+ sPrime.toString() + "By action: " + action.toString());
+						System.out.print("###### With Action " + action.toString());
+						System.out.println("###### Path updated for " + sPrime.toString());
 					}					
 					
 				}
@@ -126,7 +132,6 @@ public class PolicyEvaluator {
 			for (int j = 0; j < mdp.totalGreenEnergyLevel; j++) {
 				for (int k = 0; k < mdp.totalBatteryLevel; k++) {
 					if( mdp.grid[timeInterval][i][j][k].getUtility() > bestUtility) {
-						System.out.println("TestUtil:" + mdp.grid[timeInterval][i][j][k].getUtility());
 						bestUtility = mdp.grid[timeInterval][i][j][k].getUtility();
 						finalWorkloadLevel = i;
 						finalGreenEnergyLevel = j;
@@ -135,7 +140,6 @@ public class PolicyEvaluator {
 				}
 			}
 		}
-		System.out.println("Test:" +finalWorkloadLevel);
 		System.out.println("Best Path: " + mdp.grid[timeInterval][finalWorkloadLevel][finalGreenEnergyLevel][finalBatteryLevel].getPath());
 	
 		System.out.println("Final Utility: " + mdp.grid[timeInterval][finalWorkloadLevel][finalGreenEnergyLevel][finalBatteryLevel].getUtility());

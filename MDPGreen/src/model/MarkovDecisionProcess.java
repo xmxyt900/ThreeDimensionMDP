@@ -144,8 +144,10 @@ public class MarkovDecisionProcess {
 	
 	public State getNextReachableState() {
 		currentStateIndex ++;
-		if(currentStateIndex == numReachableState)
+		if(currentStateIndex == numReachableState) {
+			System.out.println("All reachable states have been evaluated......\n");
 			return null;
+		}
 		else return (State)reachableStates.get(currentStateIndex);
 			
 	}
@@ -173,6 +175,7 @@ public class MarkovDecisionProcess {
 	public Action getNextAction() {
 		currentAction ++;
 		if(currentAction == possibleActions.size()) {
+			System.out.println("All possible actions have been tried......\n");
 			return null;
 		}
 		else

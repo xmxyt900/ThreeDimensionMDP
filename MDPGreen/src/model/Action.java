@@ -26,7 +26,7 @@ public class Action {
 	}
 	
 	public String toString() {
-		return "workload change:" + c_workload +
+		return "[" + c_workload + ", " + batteryUsed + "]" + " workload change:" + c_workload +
 				", battery used:" + batteryUsed + "\n";
 	}
 

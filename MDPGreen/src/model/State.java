@@ -39,7 +39,7 @@ public class State {
 	
 	//Weight in reward function, if lambda = 1.0, it cares more about brown energy usage; if lambda = 0.0, it cares
 	//more about number of services running
-	final static double lambda = 0.9;
+	final static double lambda = 0.5;
 	
 	public State(int workload, int greenEnergy, int battery, double probability, double reward, int time) {
 		this.workload = workload;
