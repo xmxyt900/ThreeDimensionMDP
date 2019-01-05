@@ -1,5 +1,7 @@
 package model;
 
+import policy.PolicyIterationTest;
+
 /**
  * This class defines the State in Markov Decision Process
  * @author minxianx
@@ -40,6 +42,9 @@ public class State {
 	//Weight in reward function, if lambda = 1.0, it cares more about brown energy usage; if lambda = 0.0, it cares
 	//more about number of services running
 	final static double lambda = 0.5;
+	int totalWorkloadLevel = 5;
+	int totalGreenEnergyLevel = 3;
+	int totalBatteryLevel = 3 ;
 	
 	public State(int workload, int greenEnergy, int battery, double probability, double reward, int time) {
 		this.workload = workload;
@@ -104,9 +109,12 @@ public class State {
 	
    //New reward function:
 	//(lambda)* -(max(W - G -B), 0) + (1 - lambda)*W
+	//New reward function 12.24: reward = x(W-w) + (1-x)Max[(w - G),b-B] + (B-b)\
 	public double getReward() {
 //		return workload - Math.max(workload - greenEnergy - battery, 0);
-		return lambda * -1 * Math.max(workload - greenEnergy - battery, 0) + (1 - lambda) * workload;
+//		return lambda * -1 * Math.max(workload - greenEnergy - battery, 0) + (1 - lambda) * workload + 0.1;
+		
+		return  - (lambda * (totalWorkloadLevel - workload ) + (1 - lambda) * (Math.max(workload - greenEnergy, battery - totalBatteryLevel) + totalBatteryLevel - battery));
 		
 	}
 	

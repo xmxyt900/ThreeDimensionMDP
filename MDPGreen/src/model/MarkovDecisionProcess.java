@@ -35,6 +35,11 @@ public class MarkovDecisionProcess {
 	
 	double prob[][][][];
 	
+	//t, state1, state2
+	double rewardMatrix[][][];
+	
+	int batteryLevelMatrix[][][];
+	
 	//24 hours, 24 time intervals
 	int maxTimeInterval;
 	
@@ -53,6 +58,20 @@ public class MarkovDecisionProcess {
 		initialState.setPath(initialState.toString());
 		
 		grid = new State[maxTimeInterval][totalWorkloadLevel][totalGreenEnergyLevel][totalBatteryLevel]; 
+		
+		//initialize the reward matix  as all 0
+		rewardMatrix = new double[maxTimeInterval][totalWorkloadLevel*totalGreenEnergyLevel][totalWorkloadLevel*totalGreenEnergyLevel];
+		batteryLevelMatrix = new int[maxTimeInterval][totalWorkloadLevel*totalGreenEnergyLevel][totalWorkloadLevel*totalGreenEnergyLevel];
+		for(int i = 0; i < maxTimeInterval; i++) {
+			for(int j = 0; j < totalWorkloadLevel*totalGreenEnergyLevel; j++) {
+				for(int k = 0; k < totalWorkloadLevel*totalGreenEnergyLevel; k++) {
+					rewardMatrix[i][j][k] = 0.0;
+					batteryLevelMatrix[i][j][k] = 0;
+				}
+			}
+		}
+		
+	
 		//Initialize actions space
 		numActions = (2*totalWorkloadLevel-1) * (2*totalGreenEnergyLevel-1) * (2*totalBatteryLevel-1);
 		for(int t =0; t < maxTimeInterval; t++) {
@@ -145,7 +164,7 @@ public class MarkovDecisionProcess {
 	public State getNextReachableState() {
 		currentStateIndex ++;
 		if(currentStateIndex == numReachableState) {
-			System.out.println("All reachable states have been evaluated......\n");
+//			System.out.println("All reachable states have been evaluated......\n");
 			return null;
 		}
 		else return (State)reachableStates.get(currentStateIndex);
@@ -175,7 +194,7 @@ public class MarkovDecisionProcess {
 	public Action getNextAction() {
 		currentAction ++;
 		if(currentAction == possibleActions.size()) {
-			System.out.println("All possible actions have been tried......\n");
+//			System.out.println("All possible actions have been tried......\n");
 			return null;
 		}
 		else
@@ -252,5 +271,36 @@ public class MarkovDecisionProcess {
 		}
 	}
 	
+	public void updateRewardMatrix(int timeInterval, int s1, int s2, double rewardValue) {
+		rewardMatrix[timeInterval][s1][s2] = rewardValue;
+	}
 	
+	public void updateBatteryMatrix(int timeInterval, int s1, int s2, int batteryValue) {
+		batteryLevelMatrix[timeInterval][s1][s2] = batteryValue;
+	}
+	
+	public double[][][] getRewardMatrix(){
+		return rewardMatrix;
+	}
+	
+	public int[][][] getBatteryMatrix(){
+		return batteryLevelMatrix;
+	}
+	
+	//Output Non-zero values
+
+	
+	public int getTotalWorkloadLevel() {
+		return totalWorkloadLevel;
+	}
+	
+	public int getTotalGreenEnergyLevel() {
+		return totalGreenEnergyLevel;
+	}
+	
+	public int getTotalBatteryLevel() {
+		return totalBatteryLevel;
+	}
+	
+
 }
