@@ -7,8 +7,8 @@ public class GenerateProb {
 	
 	public static void main(String[] args) {
 	
-//		generateWithProb();
-		generateSparceProb();
+		generateWithProb();
+//		generateSparceProb();
 	}
 	
 	
@@ -32,15 +32,16 @@ public class GenerateProb {
 	
 	public static void generateWithProb() {
 		int timeIntervals = 24;
-		int totalWorkloadLevel = 5;
+		int totalWorkloadLevel = 10;
 		double [][] workloadLevelProb = new double[timeIntervals][totalWorkloadLevel];
 		
-		int seed = 1;
+		//Change seeds
+		int seed = 2;
 		Random random = new Random(seed);
 		for(int t = 0; t < timeIntervals; t++) {
 			for(int i =0; i < totalWorkloadLevel; i++) {
 				workloadLevelProb[t][i] = (double) random.nextInt(10) / 100;
-				if(workloadLevelProb[t][i] < 0.07) {
+				if(workloadLevelProb[t][i] < 0.05) {
 					workloadLevelProb[t][i] = 0;
 				}
 			}

@@ -54,7 +54,7 @@ public class PolicyEvaluator {
 			double prob;
 			double reward;
 			double preUtility;
-			double afterUtility;
+//			double afterUtility;
 
 			int tempWorkloadLevel;
 			int tempGreenEnergyLevel;
@@ -75,13 +75,14 @@ public class PolicyEvaluator {
 						prob = sPrime.getProbability();
 						preUtility = state.getUtility();
 						// Utility function: U(s')= R(s)+ prob(s,a,s')*R(s')
-						afterUtility = preUtility + prob * reward;
+						double afterUtility = preUtility + prob * reward;
 
 						tempWorkloadLevel = sPrime.getWorkload();
 						tempGreenEnergyLevel = sPrime.getGreenEnergy();
 						tempBatteryLevel = sPrime.getBattery();
-//						int batteryLevel = 0;
-						int batteryLevel = mdp.getNextBatteryLevel(state, action);
+						int batteryLevel = 0;
+//						int batteryLevel = mdp.getNextBatteryLevel(state, action);
+//						int batteryLevel = sPrime.getBattery();
 						tempPath = state.getPath();
 
 						if (sPrime.isVisited() == false && prob != 0.0) {
@@ -97,7 +98,7 @@ public class PolicyEvaluator {
 								mdp.grid[timeInterval + 1][tempWorkloadLevel][tempGreenEnergyLevel][batteryLevel]
 										.setPath(tempPath + "-->" + "Time interval#" + (timeInterval + 1) + " "
 												+ mdp.grid[timeInterval
-														+ 1][tempWorkloadLevel][tempGreenEnergyLevel][batteryLevel]
+														+ 1][tempWorkloadLevel][tempGreenEnergyLevel][tempBatteryLevel]
 																.toString()
 												+ "By action: " + action.toString());
 								// System.out.println(state.toString() + "######Path: " + tempPath + "-->" +
@@ -112,6 +113,7 @@ public class PolicyEvaluator {
 								System.out.print("###### With Action " + action.toString());
 								System.out.println("###### Path updated for " + mdp.grid[timeInterval
 										+ 1][tempWorkloadLevel][tempGreenEnergyLevel][batteryLevel].toString());
+							
 							}
 
 						}
@@ -143,7 +145,7 @@ public class PolicyEvaluator {
 
 						// Keep the path with highest utility
 						if (prob != 0.0 && sPrime.isVisited() == true && afterUtility >= mdp.grid[timeInterval
-								+ 1][tempWorkloadLevel][tempGreenEnergyLevel][tempBatteryLevel].getUtility()) {
+								+ 1][tempWorkloadLevel][tempGreenEnergyLevel][sPrime.getBattery()].getUtility()) {
 
 							for (batteryLevel = 0; batteryLevel < mdp.totalBatteryLevel; batteryLevel++) {
 
@@ -152,7 +154,7 @@ public class PolicyEvaluator {
 								mdp.grid[timeInterval + 1][tempWorkloadLevel][tempGreenEnergyLevel][batteryLevel]
 										.setPath(tempPath + "-->" + "Time interval#" + (timeInterval + 1) + " "
 												+ mdp.grid[timeInterval
-														+ 1][tempWorkloadLevel][tempGreenEnergyLevel][batteryLevel]
+														+ 1][tempWorkloadLevel][tempGreenEnergyLevel][tempBatteryLevel]
 																.toString()
 												+ "By action: " + action.toString());
 								// System.out.println(state.toString() + "######Path: " + tempPath + "-->" +
@@ -160,11 +162,12 @@ public class PolicyEvaluator {
 								// action.toString());
 
 								updateRewardMatrix(timeInterval + 1, state, sPrime, prob * reward);
-								updateBatteryMatrix(timeInterval + 1, state, sPrime, mdp.getNextBatteryLevel(state, action));
+								updateBatteryMatrix(timeInterval + 1, state, sPrime, batteryLevel);
 								
 								System.out.print("###### (Visited) With Action " + action.toString());
 								System.out.println("###### Path updated for " + mdp.grid[timeInterval
 										+ 1][tempWorkloadLevel][tempGreenEnergyLevel][batteryLevel].toString());
+
 							}
 						}
 

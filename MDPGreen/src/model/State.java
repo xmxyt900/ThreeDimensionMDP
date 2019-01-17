@@ -42,9 +42,9 @@ public class State {
 	//Weight in reward function, if lambda = 1.0, it cares more about brown energy usage; if lambda = 0.0, it cares
 	//more about number of services running
 	final static double lambda = 0.5;
-	int totalWorkloadLevel = 5;
-	int totalGreenEnergyLevel = 3;
-	int totalBatteryLevel = 3 ;
+	int totalWorkloadLevel = 10;
+	int totalGreenEnergyLevel = 10;
+	int totalBatteryLevel = 10;
 	
 	public State(int workload, int greenEnergy, int battery, double probability, double reward, int time) {
 		this.workload = workload;
@@ -63,6 +63,12 @@ public class State {
 	
 	public String toString() {
 		return ("State[" + workload + ", " + greenEnergy + ", " + battery +"] " + "reward:" + getReward() + " prob:" + getProbability() + "\n");
+	}
+	
+	//Output to short content String
+	public String toFormattedString() {
+		return ("State[" + workload + ", " + greenEnergy + ", " + battery +"]");
+
 	}
 	
 	public void setTerminate() {

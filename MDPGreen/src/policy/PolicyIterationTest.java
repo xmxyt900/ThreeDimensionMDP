@@ -1,6 +1,7 @@
 package policy;
 
 import java.io.File;
+import java.util.HashMap;
 import java.util.Random;
 
 import model.*;
@@ -12,9 +13,9 @@ import model.*;
  */
 public class PolicyIterationTest {
 
-	final static int totalWorkloadLevel = 5;
-	final static int totalGreenEnergyLevel = 3;
-	final static int totalBatteryLevel = 1;
+	final static int totalWorkloadLevel = 10;
+	final static int totalGreenEnergyLevel = 10;
+	final static int totalBatteryLevel = 10;
 
 	// 24 hours
 	final static int timeIntervals = 24;
@@ -64,9 +65,35 @@ public class PolicyIterationTest {
 	rewardMatrix = mdp.getRewardMatrix();
 	batteryLevelMatrix = mdp.getBatteryMatrix();
     
-//    outputRewardMatrix();
+    outputRewardMatrix();
     
-    findPathForState(23, mdp.grid[23][1][0][0]);
+//    findPathForState(0, mdp.grid[0][1][0][0]);
+    
+    MapFile mapFile = new MapFile();
+    
+    HashMap<State, Action> state_action_map = new HashMap<State, Action>();
+    Action tempAction;
+    for(int time = 0; time < timeIntervals-1; time++) {
+    	for(int i = 0 ; i < totalWorkloadLevel; i++) {
+    		for(int j = 0; j < totalGreenEnergyLevel; j++) {
+    			for(int k = 0; k < totalBatteryLevel; k++) {
+    				tempAction = findActionForState(time, mdp.grid[time][i][j][k]);
+    				state_action_map.put(mdp.grid[time][i][j][k], tempAction);
+    				if(tempAction == null) {
+    				mapFile.writeMap("Time Interval#" + time + mdp.grid[time][i][j][k].toFormattedString(), "Impossible State");
+    				}else {
+        				mapFile.writeMap("Time Interval#" + time + mdp.grid[time][i][j][k].toFormattedString(), tempAction.toString());
+
+    				}
+    			}
+    		}
+    	}
+    }
+    
+    mapFile.readMap("Time Interval#7" + mdp.grid[7][2][0][0].toFormattedString());
+//    findActionForState(0, mdp.grid[0][1][0][0]);
+    
+    
 		
 	}
 	
@@ -172,7 +199,10 @@ public class PolicyIterationTest {
 		return workloadLevelProb;
 	}
 
-	
+	/**
+	 * Generate green energy level probability by random
+	 * @return
+	 */
 	public static double[][] generateGreenEnergyLevelProb(){
 		int seed = 1;
 		Random random = new Random(seed);
@@ -198,7 +228,63 @@ public class PolicyIterationTest {
 		return greenEnergyLevelProb;
 	}
 	
+	/**
+	 * Find the best action for a state to reach another state.
+	 * @param time
+	 * @param state
+	 * @return
+	 */
+	public static Action findActionForState(int time, State state) {
+		if(state.getProbability() == 0) {
+			System.out.println("This state is unreachable: + " + state.toString());
+			return null;
+		}else {
+			int workloadLevel = state.getWorkload();
+			int greenEnergyLevel = state.getGreenEnergy();
+			int batteryLevel = state.getBattery();
+			
+			double reward = state.getUtility();
+		
+			int usedBattery = 0;
+			int changedworkloadLevel = 0;
+			int nexBatteryLevel = 0;
+			
+			Action action; 
+			
+			int matrixDimensionSize = totalWorkloadLevel * totalGreenEnergyLevel;
+			int seqNo; 
+		
+			seqNo = workloadLevel * totalGreenEnergyLevel + greenEnergyLevel;
+			
+			int nextSeqNo = 0;
+			
+			int i = time + 1;
+				
+				for(int index = 0; index < matrixDimensionSize; index ++) {
+						double tempReward = Math.pow(-2, 31);
+						
+						if(rewardMatrix[i][seqNo][index] != 0 && rewardMatrix[i][seqNo][index] > tempReward) {
+							tempReward = rewardMatrix[i][seqNo][index];
+							nextSeqNo = index;
+						}
+									
+				}
+				
+				usedBattery = batteryLevelMatrix[i][seqNo][nextSeqNo];
+				changedworkloadLevel = nextSeqNo / totalGreenEnergyLevel - seqNo / totalGreenEnergyLevel;
+				
+				action = new Action(changedworkloadLevel, usedBattery);
+				System.out.println(action.toString());
+				return action;			
+		}
+		
+	}
 	
+	/**
+	 * Find the best path (actions) to reach a specific state
+	 * @param time
+	 * @param state
+	 */
 	public static void findPathForState(int time, State state) {
 		if(state.getProbability() == 0) {
 			System.out.println("This state is unreachable: + " + state.toString());
@@ -208,7 +294,7 @@ public class PolicyIterationTest {
 		int batteryLevel = state.getBattery();
 		
 		String path = state.getPath();
-		double reward = state.getReward();
+		double reward = state.getUtility();
 		
 		int usedBattery = 0;
 		int changedworkloadLevel = 0;
@@ -238,7 +324,7 @@ public class PolicyIterationTest {
 //			System.out.println("Next Seq No: " + nextSeqNo);
 			
 			usedBattery = batteryLevelMatrix[i][seqNo][nextSeqNo];
-			changedworkloadLevel = nextSeqNo / 3 - seqNo / 3;
+			changedworkloadLevel = nextSeqNo / totalGreenEnergyLevel - seqNo / totalGreenEnergyLevel;
 			
 			action = new Action(changedworkloadLevel, usedBattery);
 			
@@ -246,7 +332,7 @@ public class PolicyIterationTest {
 			nexBatteryLevel =usedBattery;
 			
 			path = path + "-->" + "Time interval$" + i + " "
-			+ mdp.grid[i][nextSeqNo / 3][nextSeqNo % 3][nexBatteryLevel]
+			+ mdp.grid[i][nextSeqNo / totalGreenEnergyLevel][nextSeqNo % totalGreenEnergyLevel][nexBatteryLevel]
 							.toString()
 			+ "By action: " + action.toString();
 			
