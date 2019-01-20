@@ -33,7 +33,7 @@ public class ZipFileReader {
 	    public static void main(String[] args) throws IOException {
 	    	String fileName;
 
-	        for(int year = 2000; year < 2018; year++) {
+	        for(int year = 1990; year < 2018; year++) {
 	    	
 	        fileName = "C://GHI/GHI-" + year + ".zip";
 	        
@@ -68,8 +68,8 @@ public class ZipFileReader {
 	            line = br.readLine();
 	            String[] lines = line.split(" ");
 	            
-	            System.out.println(lines[662]);
-	            writer.write(lines[662] + " ");
+	            System.out.println(lines[COLUMN]);
+	            writer.write(lines[COLUMN] + " ");
 
 	            
 	            br.close();
