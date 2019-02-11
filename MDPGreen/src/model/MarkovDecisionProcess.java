@@ -40,6 +40,8 @@ public class MarkovDecisionProcess {
 	
 	int batteryLevelMatrix[][][];
 	
+	String actionMatrix[][][];
+	
 	//24 hours, 24 time intervals
 	int maxTimeInterval;
 	
@@ -54,7 +56,7 @@ public class MarkovDecisionProcess {
 		this.maxTimeInterval = maxTimeInterval;
 		
 		//Initial State, we set it at [0,0,0]
-		initialState = new State(0, 0, 0, 1, 0, -1);
+		initialState = new State(0, 0, 0, 1, -999, -1);
 		initialState.setPath(initialState.toString());
 		
 		grid = new State[maxTimeInterval][totalWorkloadLevel][totalGreenEnergyLevel][totalBatteryLevel]; 
@@ -62,18 +64,21 @@ public class MarkovDecisionProcess {
 		//initialize the reward matix  as all 0
 		rewardMatrix = new double[maxTimeInterval][totalWorkloadLevel*totalGreenEnergyLevel][totalWorkloadLevel*totalGreenEnergyLevel];
 		batteryLevelMatrix = new int[maxTimeInterval][totalWorkloadLevel*totalGreenEnergyLevel][totalWorkloadLevel*totalGreenEnergyLevel];
+		actionMatrix = new String[maxTimeInterval][totalWorkloadLevel*totalGreenEnergyLevel][totalWorkloadLevel*totalGreenEnergyLevel];
 		for(int i = 0; i < maxTimeInterval; i++) {
 			for(int j = 0; j < totalWorkloadLevel*totalGreenEnergyLevel; j++) {
 				for(int k = 0; k < totalWorkloadLevel*totalGreenEnergyLevel; k++) {
 					rewardMatrix[i][j][k] = 0.0;
 					batteryLevelMatrix[i][j][k] = 0;
+					actionMatrix[i][j][k] = null;
 				}
 			}
 		}
 		
 	
-		//Initialize actions space
-		numActions = (2*totalWorkloadLevel-1) * (2*totalGreenEnergyLevel-1) * (2*totalBatteryLevel-1);
+		//Initialize actions space, 
+		numActions = totalWorkloadLevel * totalBatteryLevel;
+		
 		for(int t =0; t < maxTimeInterval; t++) {
 		for(int i = 0; i < totalWorkloadLevel; i++) {
 			for(int j = 0; j < totalGreenEnergyLevel; j++) {
@@ -96,7 +101,7 @@ public class MarkovDecisionProcess {
 		for(int i = 0; i < totalWorkloadLevel; i++) {
 			for(int j = 0; j < totalGreenEnergyLevel; j++) {
 				for(int k = 0; k < totalBatteryLevel; k++) {
-					System.out.print(grid[t][i][j][k].toString());
+//					System.out.print(grid[t][i][j][k].toString());
 				}
 			}
 		}
@@ -109,12 +114,11 @@ public class MarkovDecisionProcess {
 	 * @param totalGreenEnergyLevel
 	 * @param totalBatteryLevel
 	 */
-	public void compileActions(int totalWorkloadLevel, int totalGreenEnergyLevel, int totalBatteryLevel) {
+	public void compileActions(int totalWorkloadLevel, int totalBatteryLevel) {
 		//possible actions
-		//Two possible actions for battery usage
-		possibleActions = new Vector((2*totalWorkloadLevel-1) * 2);
-		for(int i = 1-totalWorkloadLevel; i < totalWorkloadLevel; i++ ) {
-			for(int j = 0; j < 2; j++) {
+		possibleActions = new Vector(totalWorkloadLevel  * totalBatteryLevel);
+		for(int i = 0; i < totalWorkloadLevel; i++ ) {
+			for(int j = 0; j < totalBatteryLevel; j++) {
 					possibleActions.add(new Action(i ,j));
 			}
 		}
@@ -213,26 +217,37 @@ public class MarkovDecisionProcess {
 	 * @param s
 	 * @return
 	 */
-	public double getReward(State s) {
-		return s.getReward();
-	}
+//	public double getReward(State s) {
+//		return s.getReward();
+//	}
 	
 	
 	/**
 	 * Transit from one state to another with probability Pr(s, a, s')
+	 * Returns the reachable states at next time interval
 	 * @param s
 	 * @param a
+	 * @Param timeInterval
 	 * @return
 	 */
+	
 	public ArrayList<State> transit(State s, Action a, int timeInterval) {
-		    transitStates = new ArrayList<State>();
-			int newWorkloadLevel = s.getWorkload() + a.getChangedWorkload();
-			int newBatteryLevel = getNextBatteryLevel(s, a);
-			for(int newGreenEnergyLevel = 0; newGreenEnergyLevel < totalGreenEnergyLevel; newGreenEnergyLevel++) {
-				transitStates.add(grid[timeInterval+1][newWorkloadLevel][newGreenEnergyLevel][newBatteryLevel]);
+	    transitStates = new ArrayList<State>();
+//		int nextBatteryLevel = getNextBatteryLevel(s, a);
+
+
+		
+		for(int i = 0; i < totalWorkloadLevel; i++) {
+			for(int j = 0; j < totalGreenEnergyLevel; j++) {
+				for(int k = 0; k < totalBatteryLevel; k++) {
+					if(grid[timeInterval+1][i][j][k].getProbability() != 0) {
+					transitStates.add(grid[timeInterval+1][i][j][k]);
+					}
+				}
 			}
-			return transitStates;
-	}
+		}			
+		return transitStates;
+}
 	
 	/**
 	 * To validate the transit is possible, e.g. using some actions can reach out of boundary.
@@ -242,9 +257,11 @@ public class MarkovDecisionProcess {
 	 * @return
 	 */
 	public boolean isPossibleTransit(State s, Action a) {
-		int newWorkloadLevel = s.getWorkload() + a.getChangedWorkload();
+//		int newWorkloadLevel = s.getWorkload() + a.getChangedWorkload();
+		int maxBatteryLevel =  getNextBatteryLevel(s, a);
+		int maxActionLevel = s.getWorkload();
 
-	    if((newWorkloadLevel >= 0) &&  (newWorkloadLevel < totalWorkloadLevel))
+	    if((a.getChangedWorkload() <= maxActionLevel) &&  (a.getBatteryUsed() <= maxBatteryLevel))
 	    {
 		return true;
 	    }
@@ -258,12 +275,12 @@ public class MarkovDecisionProcess {
 	}
 	
 	public int getNextBatteryLevel(State s, Action a) {
-		if(a.getBatteryUsed() == 1) {
+		if(a.getBatteryUsed() > 0) {
 		int workloadLevel = s.getWorkload() ;
 		int greenEnergyLevel = s.getGreenEnergy() ;
         int batteryLevel = s.getBattery();
-        //Example: State[4, 5, 10], Action[-2,1], 
-        int nextBatteryLevel = Math.min(Math.max(greenEnergyLevel + batteryLevel - workloadLevel - a.getChangedWorkload(), 0), totalBatteryLevel-1);
+        //Example: State[5, 3, 2], next battery level is min(max(5-3, 0), 10)  = 2
+        int nextBatteryLevel = Math.min(Math.max(a.getChangedWorkload() - greenEnergyLevel, 0), totalBatteryLevel);
         return nextBatteryLevel;
         //if battery is not not used for next time interval, battery level will be 0
 		}else {
@@ -279,12 +296,20 @@ public class MarkovDecisionProcess {
 		batteryLevelMatrix[timeInterval][s1][s2] = batteryValue;
 	}
 	
+	public void updateActionMatrix(int timeInterval, int s1, int s2, String string) {
+		actionMatrix[timeInterval][s1][s2] = string;
+	}
+	
 	public double[][][] getRewardMatrix(){
 		return rewardMatrix;
 	}
 	
 	public int[][][] getBatteryMatrix(){
 		return batteryLevelMatrix;
+	}
+	
+	public String[][][] getActionMatrix(){
+		return actionMatrix;
 	}
 	
 	//Output Non-zero values

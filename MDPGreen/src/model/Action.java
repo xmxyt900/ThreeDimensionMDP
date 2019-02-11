@@ -29,5 +29,9 @@ public class Action {
 		return "[" + c_workload + ", " + batteryUsed + "]" + " workload change:" + c_workload +
 				", battery used:" + batteryUsed + "\n";
 	}
+	
+	public String toFormattedString() {
+		return "[" + c_workload + ", " + batteryUsed + "]";
+	}
 
 }

@@ -1,6 +1,7 @@
 package policy;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Random;
 
@@ -30,11 +31,11 @@ public class PolicyIterationTest {
 	
 	static double rewardMatrix[][][] = new double[timeIntervals][totalWorkloadLevel*totalGreenEnergyLevel][totalWorkloadLevel*totalGreenEnergyLevel];
 	static int batteryLevelMatrix[][][] = new int[timeIntervals][totalWorkloadLevel*totalGreenEnergyLevel][totalWorkloadLevel*totalGreenEnergyLevel];
-
+    static String actionMatrix[][][] = new String[timeIntervals][totalWorkloadLevel*totalGreenEnergyLevel][totalWorkloadLevel*totalGreenEnergyLevel];
 	
 	static MarkovDecisionProcess mdp;
 
-	public static void main(String[] args) {
+	public static void main(String[] args) throws IOException {
 
 //	prob = generateProb();	
 		
@@ -47,7 +48,7 @@ public class PolicyIterationTest {
 														 prob, timeIntervals);
 	mdp.ListAllStates();
 	
-	mdp.compileActions(totalWorkloadLevel, totalGreenEnergyLevel, totalBatteryLevel);
+	mdp.compileActions(totalWorkloadLevel, totalBatteryLevel);
 	
 	System.out.println(mdp.getNumPossibleActions());
    
@@ -64,8 +65,11 @@ public class PolicyIterationTest {
     
 	rewardMatrix = mdp.getRewardMatrix();
 	batteryLevelMatrix = mdp.getBatteryMatrix();
+	actionMatrix  = mdp.getActionMatrix();
     
-    outputRewardMatrix();
+//    outputRewardMatrix();
+    
+    outputActionMatrix();
     
 //    findPathForState(0, mdp.grid[0][1][0][0]);
     
@@ -73,16 +77,17 @@ public class PolicyIterationTest {
     
     HashMap<State, Action> state_action_map = new HashMap<State, Action>();
     Action tempAction;
-    for(int time = 0; time < timeIntervals-1; time++) {
+    for(int time = 0; time <= timeIntervals-1; time++) {
     	for(int i = 0 ; i < totalWorkloadLevel; i++) {
     		for(int j = 0; j < totalGreenEnergyLevel; j++) {
     			for(int k = 0; k < totalBatteryLevel; k++) {
-    				tempAction = findActionForState(time, mdp.grid[time][i][j][k]);
+//    				tempAction = findActionForState(time, mdp.grid[time][i][j][k]);
+    				tempAction = mdp.grid[time][i][j][k].getBestAction();
     				state_action_map.put(mdp.grid[time][i][j][k], tempAction);
     				if(tempAction == null) {
     				mapFile.writeMap("Time Interval#" + time + mdp.grid[time][i][j][k].toFormattedString(), "Impossible State");
     				}else {
-        				mapFile.writeMap("Time Interval#" + time + mdp.grid[time][i][j][k].toFormattedString(), tempAction.toString());
+        				mapFile.writeMap("Time Interval#" + time + mdp.grid[time][i][j][k].toFormattedString(), tempAction.toFormattedString());
 
     				}
     			}
@@ -90,9 +95,12 @@ public class PolicyIterationTest {
     	}
     }
     
-    mapFile.readMap("Time Interval#7" + mdp.grid[7][2][0][0].toFormattedString());
+    mapFile.closeFile();
+//    
+//    mapFile.readMap("Time Interval#7" + mdp.grid[7][2][0][0].toFormattedString());
 //    findActionForState(0, mdp.grid[0][1][0][0]);
     
+     
     
 		
 	}
@@ -354,6 +362,32 @@ public class PolicyIterationTest {
 				for(int k = 0; k < totalWorkloadLevel*totalGreenEnergyLevel; k++) {
 					if(rewardMatrix[i][j][k] != 0.0) {
 					System.out.println("matrix[" + i + ", " + j + ", " + k +"]: " + rewardMatrix[i][j][k] + ", " + batteryLevelMatrix[i][j][k]);
+					}
+				}
+			}
+		}
+	
+    }
+    
+    
+    public static void outputActionMatrix() {    	
+//		for(int i = 0; i < timeIntervals; i++) {
+//			for(int j = 0; j < totalWorkloadLevel*totalGreenEnergyLevel; j++) {
+//				for(int k = 0; k < totalWorkloadLevel*totalGreenEnergyLevel; k++) {
+////					if(actionMatrix[i][j][k] != null) {
+//					System.out.println("matrix[" + i + ", " + j + ", " + k +"]: " + actionMatrix[i][j][k]);
+////					}
+//				}
+//			}
+//		}
+    	for (int t = 0; t < timeIntervals; t++) {
+    		System.out.println("========Time Interval " + timeIntervals + "============");
+			for (int i = 0; i < totalWorkloadLevel; i++) {
+				for (int j = 0; j < totalGreenEnergyLevel; j++) {
+					for (int k = 0; k < totalBatteryLevel; k++) {
+						if(mdp.grid[t][i][j][k].getBestAction() != null) {
+							System.out.print(mdp.grid[t][i][j][k].toFormattedString() +  mdp.grid[t][i][j][k].getBestAction());
+						}
 					}
 				}
 			}

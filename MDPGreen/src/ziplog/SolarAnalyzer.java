@@ -12,8 +12,11 @@ public class SolarAnalyzer {
 	final static int datasetSize = 28; //28 data in the same hour from 28 years
 	
 	public static void main(String[] args) {
-		getDistributionOfSolarLevels(0);
-		
+		//Select specific hours, use Feb 1 ~ [24 * 31, 24*31 + 23] = [744, 767] 
+		for(int i = 744; i < 768; i++) {
+//		System.out.println("Time:" + i % 24);
+		getDistributionOfSolarLevels(i);
+		}
 	}
 	
 	/**
@@ -46,11 +49,12 @@ public class SolarAnalyzer {
 				if(solarValue != -999) {
 				usefuldata++;
 				solarlevel = solarValue / LEVELS_RANGE; 
-				System.out.println(solarlevel);
+//				System.out.println(solarlevel);
 				if(hashmap.get("Level#"+solarlevel) == null || hashmap.get("Level#"+solarlevel) == 0) {
 					hashmap.put("Level#"+solarlevel, 1);
 				}else {
 					hashmap.put("Level#"+solarlevel, hashmap.get("Level#"+solarlevel) + 1);
+//					hashmap.put("Level#"+solarlevel, hashmap.get("Level#"+solarlevel) + 1);
 				}
 			}
 				// read next line
@@ -60,13 +64,15 @@ public class SolarAnalyzer {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		System.out.println(hashmap.toString());
+//		System.out.println(hashmap.toString());
 		
 		for(int solarLevel = 0; solarLevel < 10; solarLevel++) {
 			if(hashmap.get("Level#"+solarLevel) != null) {
-				System.out.println("Solar Level " + solarLevel + " Probabability: " + (double) hashmap.get("Level#"+solarLevel) / usefuldata );
+				//System.out.println("Solar Level " + solarLevel + " Probabability: " + (double) hashmap.get("Level#"+solarLevel) / usefuldata );
+				System.out.println((double) hashmap.get("Level#"+solarLevel) / usefuldata );
 			}else {
-				System.out.println("Solar Level " + solarLevel + " Probabability: 0.0");
+//				System.out.println("Solar Level " + solarLevel + " Probabability: 0.0");
+				System.out.println(0.0);
 
 			}
 		}
@@ -98,7 +104,6 @@ public class SolarAnalyzer {
 						maxSolarValue = Integer.parseInt(strings[i]);
 					}
 				}
-				
 				System.out.println(strings[0]);
 				
 				

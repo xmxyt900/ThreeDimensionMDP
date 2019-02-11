@@ -1,6 +1,7 @@
 package model;
 
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -13,34 +14,32 @@ public class MapFile {
 	OutputStream output;
 	InputStream input;
 	
-	public MapFile() {
+	public MapFile() throws FileNotFoundException {
 		
 		prop = new Properties();
 		output = null;
 		input = null;
+		output = new FileOutputStream("src/map.properties");			
+
 		
 	}
 	
-	public void writeMap(String stringOne, String stringTwo) {
+	public void closeFile() {
 		try {
-			output = new FileOutputStream("src/map.properties");			
+			prop.store(output, null);
+			output.close();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+	
+	public void writeMap(String stringOne, String stringTwo) throws IOException {
+	
 			prop.setProperty(stringOne, stringTwo);
 
 			// save properties to project root folder
-			prop.store(output, null);
-
-		} catch (IOException io) {
-			io.printStackTrace();
-		} finally {
-			if (output != null) {
-				try {
-					output.close();
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
-			}
-
-		}
+			
 	}
 	
 	public void readMap(String stringOne) {
@@ -67,7 +66,7 @@ public class MapFile {
 		}
 	}
 	
-	public static void main(String[] args) {
+	public static void main(String[] args) throws FileNotFoundException {
 		
 		MapFile mapFile = new MapFile();
 		mapFile.readMap("Time Interval#0" + "State[2, 3, 0]");

@@ -61,8 +61,12 @@ public class State {
 		this.path = "";
 	}
 	
+//	public String toString() {
+//		return ("State[" + workload + ", " + greenEnergy + ", " + battery +"] " + "reward:" + getReward() + " prob:" + getProbability() + "\n");
+//	}
+	
 	public String toString() {
-		return ("State[" + workload + ", " + greenEnergy + ", " + battery +"] " + "reward:" + getReward() + " prob:" + getProbability() + "\n");
+		return ("State[" + workload + ", " + greenEnergy + ", " + battery +"] " +  " prob:" + getProbability() + "\n");
 	}
 	
 	//Output to short content String
@@ -116,16 +120,29 @@ public class State {
    //New reward function:
 	//(lambda)* -(max(W - G -B), 0) + (1 - lambda)*W
 	//New reward function 12.24: reward = x(W-w) + (1-x)Max[(w - G),b-B] + (B-b)\
-	public double getReward() {
-//		return workload - Math.max(workload - greenEnergy - battery, 0);
-//		return lambda * -1 * Math.max(workload - greenEnergy - battery, 0) + (1 - lambda) * workload + 0.1;
-		
-		return  - (lambda * (totalWorkloadLevel - workload ) + (1 - lambda) * (Math.max(workload - greenEnergy, battery - totalBatteryLevel) + totalBatteryLevel - battery));
-		
+	//New reward function 1.28: reward = - lambda * (max(0, a - (G+b))) + (1 - lambda) * a
+//	public double getReward() {
+////		return workload - Math.max(workload - greenEnergy - battery, 0);
+////		return lambda * -1 * Math.max(workload - greenEnergy - battery, 0) + (1 - lambda) * workload + 0.1;
+//		
+////		return  - (lambda * (totalWorkloadLevel - workload ) + (1 - lambda) * (Math.max(workload - greenEnergy, battery - totalBatteryLevel) + totalBatteryLevel - battery));
+//		return reward;
+//	}
+	
+	public double getReward(Action action) {
+		//New reward function 1.28: reward = - lambda * (max(0, a - (G+b))) + (1 - lambda) * a
+		int greenEnergyUsag =  action.getChangedWorkload() - (this.greenEnergy + action.getBatteryUsed());
+        greenEnergyUsag   = - Math.max(0, greenEnergyUsag);
+		int workloadRunning  = action.getChangedWorkload();
+        return   lambda * (greenEnergyUsag) + (1 - lambda) * workloadRunning;
 	}
 	
 	public void setReward(double reward) {
 		this.reward = reward;
+	}
+	
+	public double getReward() {
+		return reward;
 	}
 	
 	public int getIndex() {
@@ -154,6 +171,14 @@ public class State {
 	 */
 	public String getPath() {
 		return path; 
+	}
+	
+	public void setBestAction(Action action) {
+		this.action = action;
+	}
+	
+	public Action getBestAction() {
+		return action;
 	}
 
 }
